@@ -33,12 +33,12 @@ function _metFlash(isMeasure) {
 }
 
 function _metBindVolumeSlider(slider) {
-    slider.value = String(Math.round(_metSettings.volume * 100));
+    slider.value = Math.round(_metSettings.volume * 100);
     slider.oninput = function() { _metSetVolume(this.value); };
 }
 
 function _metBindFlashCheck(flashCheck) {
-    flashCheck.checked = !!_metSettings.flashEnabled;
+    flashCheck.checked = _metSettings.flashEnabled;
     flashCheck.onchange = function() { _metSettings.flashEnabled = this.checked; };
 }
 
