@@ -3,10 +3,13 @@
 
 let _metEnabled = false;
 let _metAudioCtx = null;
-let _metLastBeatIdx = -1;
 let _metVolume = 0.4;
-let _metFlashAlpha = 0;
 let _metFlashEnabled = true;
+const MET_STATE_KEY = 'slopsmithMetronomeState';
+const _metState = window[MET_STATE_KEY] || (window[MET_STATE_KEY] = {
+    lastBeatIdx: -1,
+    flashAlpha: 0,
+});
 
 function _metClick(high) {
     if (!_metAudioCtx) _metAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -23,7 +26,7 @@ function _metClick(high) {
 }
 
 function _metFlash(isMeasure) {
-    if (_metFlashEnabled) _metFlashAlpha = isMeasure ? 0.35 : 0.15;
+    if (_metFlashEnabled) _metState.flashAlpha = isMeasure ? 0.35 : 0.15;
 }
 
 // Inject toggle button into player controls
@@ -80,7 +83,7 @@ function _metToggle() {
     if (label) label.classList.toggle('hidden', !_metEnabled);
     const flashLabel = document.getElementById('met-flash-label');
     if (flashLabel) flashLabel.classList.toggle('hidden', !_metEnabled);
-    _metLastBeatIdx = -1;
+    _metState.lastBeatIdx = -1;
 }
 
 function _metSetVolume(v) {
@@ -91,7 +94,7 @@ function _metSetVolume(v) {
 // Main tick — called from a polling loop
 function _metTick() {
     if (!_metEnabled) {
-        _metFlashAlpha = 0;
+        _metState.flashAlpha = 0;
         return;
     }
     const beats = highway.getBeats();
@@ -106,21 +109,21 @@ function _metTick() {
         else hi = mid;
     }
     const idx = lo - 1;
-    if (idx < 0 || idx === _metLastBeatIdx) {
+    if (idx < 0 || idx === _metState.lastBeatIdx) {
         // Fade out flash
-        _metFlashAlpha *= 0.85;
+        _metState.flashAlpha *= 0.85;
         return;
     }
 
     // Only trigger if we're close to the beat (within 50ms) to avoid catching up on seeks
     const beatTime = beats[idx].time;
     if (Math.abs(t - beatTime) > 0.05) {
-        _metLastBeatIdx = idx;
-        _metFlashAlpha *= 0.85;
+        _metState.lastBeatIdx = idx;
+        _metState.flashAlpha *= 0.85;
         return;
     }
 
-    _metLastBeatIdx = idx;
+    _metState.lastBeatIdx = idx;
     const isMeasure = beats[idx].measure >= 0;
     _metClick(isMeasure);
     _metFlash(isMeasure);
@@ -134,20 +137,20 @@ if (
     typeof highway.addDrawHook === 'function'
 ) {
     highway.addDrawHook(function(ctx, W, H) {
-        if (_metFlashAlpha < 0.005) return;
+        if (_metState.flashAlpha < 0.005) return;
 
         // Flash across the play line area
         const y = H * 0.72;
         const h = H * 0.18;
         const grad = ctx.createLinearGradient(0, y, 0, y + h);
         grad.addColorStop(0, `rgba(255, 200, 60, 0)`);
-        grad.addColorStop(0.5, `rgba(255, 200, 60, ${_metFlashAlpha})`);
+        grad.addColorStop(0.5, `rgba(255, 200, 60, ${_metState.flashAlpha})`);
         grad.addColorStop(1, `rgba(255, 200, 60, 0)`);
         ctx.fillStyle = grad;
         ctx.fillRect(0, y, W, h);
 
         // Fade
-        _metFlashAlpha *= 0.88;
+        _metState.flashAlpha *= 0.88;
     });
     window[DRAW_HOOK_INSTALLED_FLAG] = true;
 }
@@ -167,7 +170,7 @@ window[TICK_INTERVAL_ID_KEY] = setInterval(_metTick, 1000 / 60);
     if (currentPlaySong[PLAY_SONG_WRAPPED_TAG]) return;
 
     const wrappedPlaySong = async function(filename, arrangement) {
-        _metLastBeatIdx = -1;
+        _metState.lastBeatIdx = -1;
         await currentPlaySong(filename, arrangement);
         _metInjectButton();
     };
