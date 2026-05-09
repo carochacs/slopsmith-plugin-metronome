@@ -149,12 +149,11 @@ if (!window[DRAW_HOOK_INSTALLED_FLAG]) {
 }
 
 // Poll at 60fps for beat detection
-const TICK_INTERVAL_INSTALLED_FLAG = 'slopsmithMetronomeTickIntervalInstalled';
 const TICK_INTERVAL_ID_KEY = 'slopsmithMetronomeTickIntervalId';
-if (!window[TICK_INTERVAL_INSTALLED_FLAG]) {
-    window[TICK_INTERVAL_INSTALLED_FLAG] = true;
-    window[TICK_INTERVAL_ID_KEY] = setInterval(_metTick, 1000 / 60);
+if (window[TICK_INTERVAL_ID_KEY]) {
+    clearInterval(window[TICK_INTERVAL_ID_KEY]);
 }
+window[TICK_INTERVAL_ID_KEY] = setInterval(_metTick, 1000 / 60);
 
 // Hook into playSong to inject button and reset state
 (function() {
