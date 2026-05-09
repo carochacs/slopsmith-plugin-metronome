@@ -32,6 +32,16 @@ function _metFlash(isMeasure) {
     if (_metSettings.flashEnabled) _metState.flashAlpha = isMeasure ? 0.35 : 0.15;
 }
 
+function _metBindVolumeSlider(slider) {
+    slider.value = String(Math.round(_metSettings.volume * 100));
+    slider.oninput = function() { _metSetVolume(this.value); };
+}
+
+function _metBindFlashCheck(flashCheck) {
+    flashCheck.checked = !!_metSettings.flashEnabled;
+    flashCheck.onchange = function() { _metSettings.flashEnabled = this.checked; };
+}
+
 // Inject toggle button into player controls
 function _metInjectButton() {
     const controls = document.getElementById('player-controls');
@@ -41,14 +51,8 @@ function _metInjectButton() {
         const existingSlider = document.getElementById('met-volume');
         const existingFlashCheck = document.getElementById('met-flash-check');
         existingBtn.onclick = _metToggle;
-        if (existingSlider) {
-            existingSlider.value = String(Math.round(_metSettings.volume * 100));
-            existingSlider.oninput = function() { _metSetVolume(this.value); };
-        }
-        if (existingFlashCheck) {
-            existingFlashCheck.checked = !!_metSettings.flashEnabled;
-            existingFlashCheck.onchange = function() { _metSettings.flashEnabled = this.checked; };
-        }
+        if (existingSlider) _metBindVolumeSlider(existingSlider);
+        if (existingFlashCheck) _metBindFlashCheck(existingFlashCheck);
         _metSyncUi();
         return;
     }
@@ -69,9 +73,8 @@ function _metInjectButton() {
     slider.id = 'met-volume';
     slider.min = '0';
     slider.max = '100';
-    slider.value = String(Math.round(_metSettings.volume * 100));
     slider.className = 'w-16 accent-amber-400 hidden';
-    slider.oninput = function() { _metSetVolume(this.value); };
+    _metBindVolumeSlider(slider);
     controls.insertBefore(slider, insertBefore);
 
     const label = document.createElement('span');
@@ -83,14 +86,14 @@ function _metInjectButton() {
     const flashLabel = document.createElement('label');
     flashLabel.id = 'met-flash-label';
     flashLabel.className = 'flex items-center gap-1 text-xs text-gray-500 cursor-pointer hidden';
-    flashLabel.innerHTML = '<input type="checkbox" id="met-flash-check" class="accent-amber-400"> Flash';
+    const flashCheck = document.createElement('input');
+    flashCheck.type = 'checkbox';
+    flashCheck.id = 'met-flash-check';
+    flashCheck.className = 'accent-amber-400';
+    flashLabel.appendChild(flashCheck);
+    flashLabel.appendChild(document.createTextNode(' Flash'));
     controls.insertBefore(flashLabel, insertBefore);
-
-    const flashCheck = document.getElementById('met-flash-check');
-    if (flashCheck) {
-        flashCheck.checked = !!_metSettings.flashEnabled;
-        flashCheck.onchange = function() { _metSettings.flashEnabled = this.checked; };
-    }
+    _metBindFlashCheck(flashCheck);
     _metSyncUi();
 }
 
