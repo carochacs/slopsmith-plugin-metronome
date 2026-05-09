@@ -164,7 +164,7 @@ window[TICK_INTERVAL_ID_KEY] = setInterval(_metTick, 1000 / 60);
 
 // Hook into playSong to inject button and reset state
 (function() {
-    const PLAY_SONG_HOOK_FLAG = '__slopsmithMetronomeHooksInstalled';
+    const PLAY_SONG_HOOK_FLAG = '__slopsmithMetronomePlaySongHooksInstalled';
     const PLAY_SONG_WRAPPED_TAG = 'slopsmithMetronomePlaySongWrapped';
     const currentPlaySong = window.playSong;
     if (typeof currentPlaySong !== 'function') return;
