@@ -165,11 +165,10 @@ window[TICK_INTERVAL_ID_KEY] = setInterval(_metTick, 1000 / 60);
     const currentPlaySong = window.playSong;
     if (typeof currentPlaySong !== 'function') return;
     if (currentPlaySong[PLAY_SONG_WRAPPED_TAG]) return;
-    const origPlaySong = currentPlaySong;
 
     const wrappedPlaySong = async function(filename, arrangement) {
         _metLastBeatIdx = -1;
-        await origPlaySong(filename, arrangement);
+        await currentPlaySong(filename, arrangement);
         _metInjectButton();
     };
     wrappedPlaySong[PLAY_SONG_WRAPPED_TAG] = true;
