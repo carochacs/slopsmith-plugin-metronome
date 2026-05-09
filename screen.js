@@ -13,6 +13,7 @@ const _metState = window[MET_STATE_KEY] || (window[MET_STATE_KEY] = {
     lastBeatIdx: -1,
     flashAlpha: 0,
 });
+let _metNextDrawHookCheckAt = 0;
 
 function _metClick(high) {
     if (!_metAudioCtx) _metAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -235,8 +236,13 @@ if (window[TICK_INTERVAL_ID_KEY]) {
 }
 window[TICK_INTERVAL_ID_KEY] = setInterval(function() {
     const currentHighway = _metGetHighway();
-    if (window[DRAW_HOOK_HIGHWAY_REF_KEY] !== currentHighway) {
+    const now = Date.now();
+    if (
+        window[DRAW_HOOK_HIGHWAY_REF_KEY] !== currentHighway &&
+        now >= _metNextDrawHookCheckAt
+    ) {
         _metEnsureDrawHookInstalled();
+        _metNextDrawHookCheckAt = now + 1000;
     }
     _metTick();
 }, 1000 / 60);
