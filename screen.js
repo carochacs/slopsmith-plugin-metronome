@@ -130,11 +130,11 @@ function _metTick() {
 }
 
 // Register draw hook on the highway renderer for the visual flash
-const DRAW_HOOK_INSTALLED_FLAG = 'slopsmithMetronomeDrawHookInstalled';
+const DRAW_HOOK_HIGHWAY_REF_KEY = 'slopsmithMetronomeDrawHookHighwayRef';
 if (
-    !window[DRAW_HOOK_INSTALLED_FLAG] &&
     typeof highway !== 'undefined' &&
-    typeof highway.addDrawHook === 'function'
+    typeof highway.addDrawHook === 'function' &&
+    window[DRAW_HOOK_HIGHWAY_REF_KEY] !== highway
 ) {
     highway.addDrawHook(function(ctx, W, H) {
         if (_metState.flashAlpha < 0.005) return;
@@ -152,7 +152,7 @@ if (
         // Fade
         _metState.flashAlpha *= 0.88;
     });
-    window[DRAW_HOOK_INSTALLED_FLAG] = true;
+    window[DRAW_HOOK_HIGHWAY_REF_KEY] = highway;
 }
 
 // Poll at 60fps for beat detection
@@ -164,12 +164,16 @@ window[TICK_INTERVAL_ID_KEY] = setInterval(_metTick, 1000 / 60);
 
 // Hook into playSong to inject button and reset state
 (function() {
-    const PLAY_SONG_HOOK_FLAG = '__slopsmithMetronomePlaySongHooksInstalled';
+    const PLAY_SONG_HOOK_FLAG = '__slopsmithMetronomeHooksInstalled';
     const PLAY_SONG_WRAPPED_TAG = 'slopsmithMetronomePlaySongWrapped';
     const currentPlaySong = window.playSong;
     if (typeof currentPlaySong !== 'function') return;
-    if (window[PLAY_SONG_HOOK_FLAG]) return;
-    if (currentPlaySong[PLAY_SONG_WRAPPED_TAG]) return;
+    const installedPlaySong = window[PLAY_SONG_HOOK_FLAG];
+    if (installedPlaySong === currentPlaySong && currentPlaySong[PLAY_SONG_WRAPPED_TAG]) return;
+    if (currentPlaySong[PLAY_SONG_WRAPPED_TAG]) {
+        window[PLAY_SONG_HOOK_FLAG] = currentPlaySong;
+        return;
+    }
 
     const wrappedPlaySong = async function(filename, arrangement) {
         _metState.lastBeatIdx = -1;
