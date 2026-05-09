@@ -165,16 +165,14 @@ window[TICK_INTERVAL_ID_KEY] = setInterval(_metTick, 1000 / 60);
 
 // Hook into playSong to inject button and reset state
 (function() {
-    const PLAY_SONG_HOOK_FLAG = '__slopsmithMetronomeHooksInstalled';
+    const METRONOME_HOOKS_INSTALLED_FLAG = '__slopsmithMetronomeHooksInstalled';
     const PLAY_SONG_WRAPPED_TAG = 'slopsmithMetronomePlaySongWrapped';
     const currentPlaySong = window.playSong;
     if (typeof currentPlaySong !== 'function') return;
-    if (
-        currentPlaySong[PLAY_SONG_WRAPPED_TAG] &&
-        window[PLAY_SONG_HOOK_FLAG] === currentPlaySong
-    ) return;
     if (currentPlaySong[PLAY_SONG_WRAPPED_TAG]) {
-        window[PLAY_SONG_HOOK_FLAG] = currentPlaySong;
+        if (window[METRONOME_HOOKS_INSTALLED_FLAG] !== currentPlaySong) {
+            window[METRONOME_HOOKS_INSTALLED_FLAG] = currentPlaySong;
+        }
         return;
     }
 
@@ -185,5 +183,5 @@ window[TICK_INTERVAL_ID_KEY] = setInterval(_metTick, 1000 / 60);
     };
     wrappedPlaySong[PLAY_SONG_WRAPPED_TAG] = true;
     window.playSong = wrappedPlaySong;
-    window[PLAY_SONG_HOOK_FLAG] = true;
+    window[METRONOME_HOOKS_INSTALLED_FLAG] = wrappedPlaySong;
 })();
