@@ -169,6 +169,8 @@ window[TICK_INTERVAL_ID_KEY] = setInterval(_metTick, 1000 / 60);
     const PLAY_SONG_WRAPPED_TAG = 'slopsmithMetronomePlaySongWrapped';
     const currentPlaySong = window.playSong;
     if (typeof currentPlaySong !== 'function') return;
+    const installedPlaySong = window[METRONOME_HOOKS_INSTALLED_FLAG];
+    if (installedPlaySong === currentPlaySong && currentPlaySong[PLAY_SONG_WRAPPED_TAG]) return;
     if (currentPlaySong[PLAY_SONG_WRAPPED_TAG]) {
         if (window[METRONOME_HOOKS_INSTALLED_FLAG] !== currentPlaySong) {
             window[METRONOME_HOOKS_INSTALLED_FLAG] = currentPlaySong;
