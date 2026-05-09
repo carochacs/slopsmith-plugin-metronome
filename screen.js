@@ -13,7 +13,6 @@ const _metState = window[MET_STATE_KEY] || (window[MET_STATE_KEY] = {
     lastBeatIdx: -1,
     flashAlpha: 0,
 });
-const DRAW_HOOK_HIGHWAY_REF_KEY = 'slopsmithMetronomeDrawHookHighwayRef';
 
 function _metClick(high) {
     if (!_metAudioCtx) _metAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -145,6 +144,8 @@ function _metSetVolume(v) {
     if (volLabel) volLabel.textContent = v + '%';
 }
 
+const DRAW_HOOK_HIGHWAY_REF_KEY = 'slopsmithMetronomeDrawHookHighwayRef';
+
 function _metGetHighway() {
     return typeof highway !== 'undefined' ? highway : null;
 }
@@ -233,7 +234,10 @@ if (window[TICK_INTERVAL_ID_KEY]) {
     clearInterval(window[TICK_INTERVAL_ID_KEY]);
 }
 window[TICK_INTERVAL_ID_KEY] = setInterval(function() {
-    _metEnsureDrawHookInstalled();
+    const currentHighway = _metGetHighway();
+    if (window[DRAW_HOOK_HIGHWAY_REF_KEY] !== currentHighway) {
+        _metEnsureDrawHookInstalled();
+    }
     _metTick();
 }, 1000 / 60);
 
