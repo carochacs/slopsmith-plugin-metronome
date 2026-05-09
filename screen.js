@@ -36,11 +36,11 @@ function _metFlash(isMeasure) {
 function _metInjectButton() {
     const controls = document.getElementById('player-controls');
     if (!controls) return;
-    if (document.getElementById('btn-metronome')) {
-        const existingBtn = document.getElementById('btn-metronome');
+    const existingBtn = document.getElementById('btn-metronome');
+    if (existingBtn) {
         const existingSlider = document.getElementById('met-volume');
         const existingFlashCheck = document.getElementById('met-flash-check');
-        if (existingBtn) existingBtn.onclick = _metToggle;
+        existingBtn.onclick = _metToggle;
         if (existingSlider) {
             existingSlider.value = String(Math.round(_metSettings.volume * 100));
             existingSlider.oninput = function() { _metSetVolume(this.value); };
