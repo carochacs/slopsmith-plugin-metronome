@@ -1,10 +1,13 @@
 // Metronome Overlay plugin
 // Adds audible click and visual flash on beats, synced to the song's tempo.
 
-let _metEnabled = false;
 let _metAudioCtx = null;
-let _metVolume = 0.4;
-let _metFlashEnabled = true;
+const MET_SETTINGS_KEY = 'slopsmithMetronomeSettings';
+const _metSettings = window[MET_SETTINGS_KEY] || (window[MET_SETTINGS_KEY] = {
+    enabled: false,
+    volume: 0.4,
+    flashEnabled: true,
+});
 const MET_STATE_KEY = 'slopsmithMetronomeState';
 const _metState = window[MET_STATE_KEY] || (window[MET_STATE_KEY] = {
     lastBeatIdx: -1,
@@ -19,20 +22,36 @@ function _metClick(high) {
     gain.connect(_metAudioCtx.destination);
     osc.frequency.value = high ? 1500 : 1000;
     osc.type = 'sine';
-    gain.gain.setValueAtTime(_metVolume, _metAudioCtx.currentTime);
+    gain.gain.setValueAtTime(_metSettings.volume, _metAudioCtx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001, _metAudioCtx.currentTime + 0.06);
     osc.start(_metAudioCtx.currentTime);
     osc.stop(_metAudioCtx.currentTime + 0.06);
 }
 
 function _metFlash(isMeasure) {
-    if (_metFlashEnabled) _metState.flashAlpha = isMeasure ? 0.35 : 0.15;
+    if (_metSettings.flashEnabled) _metState.flashAlpha = isMeasure ? 0.35 : 0.15;
 }
 
 // Inject toggle button into player controls
 function _metInjectButton() {
     const controls = document.getElementById('player-controls');
-    if (!controls || document.getElementById('btn-metronome')) return;
+    if (!controls) return;
+    if (document.getElementById('btn-metronome')) {
+        const existingBtn = document.getElementById('btn-metronome');
+        const existingSlider = document.getElementById('met-volume');
+        const existingFlashCheck = document.getElementById('met-flash-check');
+        if (existingBtn) existingBtn.onclick = _metToggle;
+        if (existingSlider) {
+            existingSlider.value = String(Math.round(_metSettings.volume * 100));
+            existingSlider.oninput = function() { _metSetVolume(this.value); };
+        }
+        if (existingFlashCheck) {
+            existingFlashCheck.checked = !!_metSettings.flashEnabled;
+            existingFlashCheck.onchange = function() { _metSettings.flashEnabled = this.checked; };
+        }
+        _metSyncUi();
+        return;
+    }
 
     const lyricsBtn = document.getElementById('btn-lyrics');
     const insertBefore = lyricsBtn?.nextSibling || controls.querySelector('button:last-child');
@@ -50,7 +69,7 @@ function _metInjectButton() {
     slider.id = 'met-volume';
     slider.min = '0';
     slider.max = '100';
-    slider.value = '40';
+    slider.value = String(Math.round(_metSettings.volume * 100));
     slider.className = 'w-16 accent-amber-400 hidden';
     slider.oninput = function() { _metSetVolume(this.value); };
     controls.insertBefore(slider, insertBefore);
@@ -58,42 +77,55 @@ function _metInjectButton() {
     const label = document.createElement('span');
     label.id = 'met-vol-label';
     label.className = 'text-xs text-gray-500 w-8 hidden';
-    label.textContent = '40%';
+    label.textContent = `${Math.round(_metSettings.volume * 100)}%`;
     controls.insertBefore(label, insertBefore);
 
     const flashLabel = document.createElement('label');
     flashLabel.id = 'met-flash-label';
     flashLabel.className = 'flex items-center gap-1 text-xs text-gray-500 cursor-pointer hidden';
-    flashLabel.innerHTML = '<input type="checkbox" id="met-flash-check" checked class="accent-amber-400" onchange="_metFlashEnabled=this.checked"> Flash';
+    flashLabel.innerHTML = '<input type="checkbox" id="met-flash-check" class="accent-amber-400"> Flash';
     controls.insertBefore(flashLabel, insertBefore);
+
+    const flashCheck = document.getElementById('met-flash-check');
+    if (flashCheck) {
+        flashCheck.checked = !!_metSettings.flashEnabled;
+        flashCheck.onchange = function() { _metSettings.flashEnabled = this.checked; };
+    }
+    _metSyncUi();
 }
 
-function _metToggle() {
-    _metEnabled = !_metEnabled;
+function _metSyncUi() {
+    const enabled = _metSettings.enabled;
     const btn = document.getElementById('btn-metronome');
     const slider = document.getElementById('met-volume');
     const label = document.getElementById('met-vol-label');
+    const flashLabel = document.getElementById('met-flash-label');
     if (btn) {
-        btn.className = _metEnabled
+        btn.className = enabled
             ? 'px-3 py-1.5 bg-amber-900/50 rounded-lg text-xs text-amber-300 transition'
             : 'px-3 py-1.5 bg-dark-600 hover:bg-dark-500 rounded-lg text-xs text-gray-500 transition';
-        btn.textContent = _metEnabled ? 'Metronome ✓' : 'Metronome';
+        btn.textContent = enabled ? 'Metronome ✓' : 'Metronome';
     }
-    if (slider) slider.classList.toggle('hidden', !_metEnabled);
-    if (label) label.classList.toggle('hidden', !_metEnabled);
-    const flashLabel = document.getElementById('met-flash-label');
-    if (flashLabel) flashLabel.classList.toggle('hidden', !_metEnabled);
+    if (slider) slider.classList.toggle('hidden', !enabled);
+    if (label) label.classList.toggle('hidden', !enabled);
+    if (flashLabel) flashLabel.classList.toggle('hidden', !enabled);
+}
+
+function _metToggle() {
+    _metSettings.enabled = !_metSettings.enabled;
+    _metSyncUi();
     _metState.lastBeatIdx = -1;
 }
 
 function _metSetVolume(v) {
-    _metVolume = v / 100;
-    document.getElementById('met-vol-label').textContent = v + '%';
+    _metSettings.volume = v / 100;
+    const volLabel = document.getElementById('met-vol-label');
+    if (volLabel) volLabel.textContent = v + '%';
 }
 
 // Main tick — called from a polling loop
 function _metTick() {
-    if (!_metEnabled) {
+    if (!_metSettings.enabled) {
         _metState.flashAlpha = 0;
         return;
     }
@@ -165,14 +197,14 @@ window[TICK_INTERVAL_ID_KEY] = setInterval(_metTick, 1000 / 60);
 
 // Hook into playSong to inject button and reset state
 (function() {
-    const METRONOME_HOOKS_INSTALLED_FLAG = '__slopsmithMetronomeHooksInstalled';
+    const INSTALLED_PLAY_SONG_REF_KEY = '__slopsmithMetronomeInstalledPlaySongRef';
     const PLAY_SONG_WRAPPED_TAG = 'slopsmithMetronomePlaySongWrapped';
     const currentPlaySong = window.playSong;
     if (typeof currentPlaySong !== 'function') return;
-    const installedPlaySong = window[METRONOME_HOOKS_INSTALLED_FLAG];
-    if (installedPlaySong === currentPlaySong) return;
+    const installedPlaySongRef = window[INSTALLED_PLAY_SONG_REF_KEY];
+    if (installedPlaySongRef === currentPlaySong) return;
     if (currentPlaySong[PLAY_SONG_WRAPPED_TAG]) {
-        window[METRONOME_HOOKS_INSTALLED_FLAG] = currentPlaySong;
+        window[INSTALLED_PLAY_SONG_REF_KEY] = currentPlaySong;
         return;
     }
 
@@ -183,5 +215,5 @@ window[TICK_INTERVAL_ID_KEY] = setInterval(_metTick, 1000 / 60);
     };
     wrappedPlaySong[PLAY_SONG_WRAPPED_TAG] = true;
     window.playSong = wrappedPlaySong;
-    window[METRONOME_HOOKS_INSTALLED_FLAG] = wrappedPlaySong;
+    window[INSTALLED_PLAY_SONG_REF_KEY] = wrappedPlaySong;
 })();
