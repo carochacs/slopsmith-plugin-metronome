@@ -33,13 +33,21 @@ function _metFlash(isMeasure) {
 }
 
 function _metBindVolumeSlider(slider) {
+    if (slider._metVolumeListener) {
+        slider.removeEventListener('input', slider._metVolumeListener);
+    }
     slider.value = Math.round(_metSettings.volume * 100);
-    slider.oninput = function() { _metSetVolume(this.value); };
+    slider._metVolumeListener = function() { _metSetVolume(this.value); };
+    slider.addEventListener('input', slider._metVolumeListener);
 }
 
 function _metBindFlashCheck(flashCheck) {
+    if (flashCheck._metFlashListener) {
+        flashCheck.removeEventListener('change', flashCheck._metFlashListener);
+    }
     flashCheck.checked = _metSettings.flashEnabled;
-    flashCheck.onchange = function() { _metSettings.flashEnabled = this.checked; };
+    flashCheck._metFlashListener = function() { _metSettings.flashEnabled = this.checked; };
+    flashCheck.addEventListener('change', flashCheck._metFlashListener);
 }
 
 // Inject toggle button into player controls
