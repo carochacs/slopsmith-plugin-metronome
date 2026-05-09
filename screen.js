@@ -33,7 +33,10 @@ function _metFlash(isMeasure) {
 }
 
 function _metBindVolumeSlider(slider) {
-    slider.oninput = null;
+    if (typeof slider.oninput === 'function') {
+        // Clear legacy property handler from earlier plugin versions.
+        slider.oninput = null;
+    }
     if (slider._metVolumeListener) {
         slider.removeEventListener('input', slider._metVolumeListener);
     }
@@ -45,7 +48,10 @@ function _metBindVolumeSlider(slider) {
 }
 
 function _metBindFlashCheck(flashCheck) {
-    flashCheck.onchange = null;
+    if (typeof flashCheck.onchange === 'function') {
+        // Clear legacy property/inline handler from earlier plugin versions.
+        flashCheck.onchange = null;
+    }
     if (flashCheck._metFlashListener) {
         flashCheck.removeEventListener('change', flashCheck._metFlashListener);
     }
@@ -222,7 +228,7 @@ window[TICK_INTERVAL_ID_KEY] = setInterval(_metTick, 1000 / 60);
     if (
         installedPlaySongRef === currentPlaySong &&
         currentPlaySong[PLAY_SONG_WRAPPED_TAG] === true &&
-        // Re-wrap when script re-evaluation introduces a newer _metInjectButton closure.
+        // Skip re-wrap only when this wrapper already targets the current inject function.
         currentPlaySong[PLAY_SONG_INJECT_REF_TAG] === _metInjectButton
     ) {
         return;
