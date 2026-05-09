@@ -144,14 +144,55 @@ function _metSetVolume(v) {
     if (volLabel) volLabel.textContent = v + '%';
 }
 
+function _metGetHighway() {
+    return typeof highway !== 'undefined' ? highway : null;
+}
+
+function _metEnsureDrawHookInstalled() {
+    const currentHighway = _metGetHighway();
+    if (
+        !currentHighway ||
+        typeof currentHighway.addDrawHook !== 'function' ||
+        window[DRAW_HOOK_HIGHWAY_REF_KEY] === currentHighway
+    ) {
+        return;
+    }
+
+    currentHighway.addDrawHook(function(ctx, W, H) {
+        if (_metState.flashAlpha < 0.005) return;
+
+        // Flash across the play line area
+        const y = H * 0.72;
+        const h = H * 0.18;
+        const grad = ctx.createLinearGradient(0, y, 0, y + h);
+        grad.addColorStop(0, `rgba(255, 200, 60, 0)`);
+        grad.addColorStop(0.5, `rgba(255, 200, 60, ${_metState.flashAlpha})`);
+        grad.addColorStop(1, `rgba(255, 200, 60, 0)`);
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, y, W, h);
+
+        // Fade
+        _metState.flashAlpha *= 0.88;
+    });
+    window[DRAW_HOOK_HIGHWAY_REF_KEY] = currentHighway;
+}
+
 // Main tick — called from a polling loop
 function _metTick() {
+    const currentHighway = _metGetHighway();
+    if (
+        !currentHighway ||
+        typeof currentHighway.getBeats !== 'function' ||
+        typeof currentHighway.getTime !== 'function'
+    ) {
+        return;
+    }
     if (!_metSettings.enabled) {
         _metState.flashAlpha = 0;
         return;
     }
-    const beats = highway.getBeats();
-    const t = highway.getTime();
+    const beats = currentHighway.getBeats();
+    const t = currentHighway.getTime();
     if (!beats || beats.length === 0) return;
 
     // Find the current beat (the most recent beat <= current time)
@@ -184,41 +225,21 @@ function _metTick() {
 
 // Register draw hook on the highway renderer for the visual flash
 const DRAW_HOOK_HIGHWAY_REF_KEY = 'slopsmithMetronomeDrawHookHighwayRef';
-const currentHighway = typeof highway !== 'undefined' ? highway : null;
-if (
-    currentHighway &&
-    typeof currentHighway.addDrawHook === 'function' &&
-    window[DRAW_HOOK_HIGHWAY_REF_KEY] !== currentHighway
-) {
-    currentHighway.addDrawHook(function(ctx, W, H) {
-        if (_metState.flashAlpha < 0.005) return;
-
-        // Flash across the play line area
-        const y = H * 0.72;
-        const h = H * 0.18;
-        const grad = ctx.createLinearGradient(0, y, 0, y + h);
-        grad.addColorStop(0, `rgba(255, 200, 60, 0)`);
-        grad.addColorStop(0.5, `rgba(255, 200, 60, ${_metState.flashAlpha})`);
-        grad.addColorStop(1, `rgba(255, 200, 60, 0)`);
-        ctx.fillStyle = grad;
-        ctx.fillRect(0, y, W, h);
-
-        // Fade
-        _metState.flashAlpha *= 0.88;
-    });
-    window[DRAW_HOOK_HIGHWAY_REF_KEY] = currentHighway;
-}
+_metEnsureDrawHookInstalled();
 
 // Poll at 60fps for beat detection
 const TICK_INTERVAL_ID_KEY = 'slopsmithMetronomeTickIntervalId';
 if (window[TICK_INTERVAL_ID_KEY]) {
     clearInterval(window[TICK_INTERVAL_ID_KEY]);
 }
-window[TICK_INTERVAL_ID_KEY] = setInterval(_metTick, 1000 / 60);
+window[TICK_INTERVAL_ID_KEY] = setInterval(function() {
+    _metEnsureDrawHookInstalled();
+    _metTick();
+}, 1000 / 60);
 
 // Hook into playSong to inject button and reset state
 (function() {
-    const INSTALLED_PLAY_SONG_WRAPPER_REF_KEY = '__slopsmithMetronomeHooksInstalled';
+    const INSTALLED_PLAY_SONG_WRAPPER_REF_KEY = '__slopsmithMetronomeInstalledPlaySongWrapperRef';
     const PLAY_SONG_WRAPPED_TAG = 'slopsmithMetronomePlaySongWrapped';
     const PLAY_SONG_ORIGINAL_REF_TAG = 'slopsmithMetronomePlaySongOriginalRef';
     const currentPlaySong = window.playSong;
