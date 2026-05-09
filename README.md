@@ -5,7 +5,7 @@ A plugin for [Slopsmith](https://github.com/byrongamatos/slopsmith) that adds an
 ## Features
 
 - **Audible click** — plays a sine tone on every beat, with a higher pitch on downbeats (measure starts)
-- **Visual flash** — subtle glow on the highway canvas on each beat (gold for downbeats, blue for other beats)
+- **Visual flash** — subtle amber glow on the highway canvas on each beat (brighter on downbeats)
 - **Tempo-synced** — follows the song's actual beat map, including tempo changes
 - **Toggle button** — click "Metronome" in the player controls to enable/disable
 - **Zero setup** — no configuration needed, works with any song
