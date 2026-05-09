@@ -227,9 +227,7 @@ window[TICK_INTERVAL_ID_KEY] = setInterval(_metTick, 1000 / 60);
     const installedPlaySongRef = window[INSTALLED_PLAY_SONG_WRAPPER_REF_KEY];
     if (
         installedPlaySongRef === currentPlaySong &&
-        currentPlaySong[PLAY_SONG_WRAPPED_TAG] === true &&
-        // Skip re-wrap only when this wrapper already targets the current inject function.
-        currentPlaySong[PLAY_SONG_INJECT_REF_TAG] === _metInjectButton
+        currentPlaySong[PLAY_SONG_WRAPPED_TAG] === true
     ) {
         return;
     }
