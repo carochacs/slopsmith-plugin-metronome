@@ -161,9 +161,9 @@ if (!window[TICK_INTERVAL_INSTALLED_FLAG]) {
     // older core builds without the load-side guard), don't re-wrap playSong —
     // each re-wrap captures the previous wrapper, growing the chain and
     // leaking closures.
-    const HOOK_KEY = 'slopsmithMetronomeHooksInstalled';
-    if (window[HOOK_KEY]) return;
-    window[HOOK_KEY] = true;
+    const PLAY_SONG_HOOK_INSTALLED_FLAG = 'slopsmithMetronomeHooksInstalled';
+    if (window[PLAY_SONG_HOOK_INSTALLED_FLAG]) return;
+    window[PLAY_SONG_HOOK_INSTALLED_FLAG] = true;
 
     const origPlaySong = window.playSong;
     window.playSong = async function(filename, arrangement) {
