@@ -163,8 +163,8 @@ window[TICK_INTERVAL_ID_KEY] = setInterval(_metTick, 1000 / 60);
 (function() {
     const PLAY_SONG_WRAPPED_TAG = 'slopsmithMetronomePlaySongWrapped';
     if (typeof window.playSong !== 'function') return;
-    if (window.playSong[PLAY_SONG_WRAPPED_TAG]) return;
     const origPlaySong = window.playSong;
+    if (origPlaySong[PLAY_SONG_WRAPPED_TAG]) return;
 
     const wrappedPlaySong = async function(filename, arrangement) {
         _metLastBeatIdx = -1;
