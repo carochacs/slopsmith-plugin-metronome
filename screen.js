@@ -127,9 +127,9 @@ function _metTick() {
 }
 
 // Register draw hook on the highway renderer for the visual flash
-const DRAW_HOOK_KEY = '__slopsmithMetronomeDrawHookInstalled';
-if (!window[DRAW_HOOK_KEY]) {
-    window[DRAW_HOOK_KEY] = true;
+const DRAW_HOOK_INSTALLED_FLAG = '__slopsmithMetronomeDrawHookInstalled';
+if (!window[DRAW_HOOK_INSTALLED_FLAG]) {
+    window[DRAW_HOOK_INSTALLED_FLAG] = true;
     highway.addDrawHook(function(ctx, W, H) {
         if (_metFlashAlpha < 0.005) return;
 
@@ -149,9 +149,10 @@ if (!window[DRAW_HOOK_KEY]) {
 }
 
 // Poll at 60fps for beat detection
-const TICK_INTERVAL_KEY = '__slopsmithMetronomeTickIntervalId';
-if (!window[TICK_INTERVAL_KEY]) {
-    window[TICK_INTERVAL_KEY] = setInterval(_metTick, 1000 / 60);
+const TICK_INTERVAL_INSTALLED_FLAG = '__slopsmithMetronomeTickIntervalInstalled';
+if (!window[TICK_INTERVAL_INSTALLED_FLAG]) {
+    window[TICK_INTERVAL_INSTALLED_FLAG] = true;
+    setInterval(_metTick, 1000 / 60);
 }
 
 // Hook into playSong to inject button and reset state
