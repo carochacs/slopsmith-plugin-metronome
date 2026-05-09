@@ -214,23 +214,23 @@ window[TICK_INTERVAL_ID_KEY] = setInterval(_metTick, 1000 / 60);
 
 // Hook into playSong to inject button and reset state
 (function() {
-    const INSTALLED_PLAY_SONG_REF_KEY = '__slopsmithMetronomeHooksInstalled';
+    const INSTALLED_HOOKS_REF_KEY = '__slopsmithMetronomeHooksInstalled';
     const PLAY_SONG_WRAPPED_TAG = 'slopsmithMetronomePlaySongWrapped';
     const PLAY_SONG_ORIGINAL_REF_TAG = 'slopsmithMetronomePlaySongOriginalRef';
     const PLAY_SONG_INJECT_REF_TAG = 'slopsmithMetronomePlaySongInjectRef';
     const currentPlaySong = window.playSong;
     if (typeof currentPlaySong !== 'function') return;
-    const installedPlaySongRef = window[INSTALLED_PLAY_SONG_REF_KEY];
+    const installedPlaySongRef = window[INSTALLED_HOOKS_REF_KEY];
     if (
         installedPlaySongRef === currentPlaySong &&
-        currentPlaySong[PLAY_SONG_WRAPPED_TAG] &&
+        currentPlaySong[PLAY_SONG_WRAPPED_TAG] === true &&
         // Re-wrap when script re-evaluation introduces a newer _metInjectButton closure.
         currentPlaySong[PLAY_SONG_INJECT_REF_TAG] === _metInjectButton
     ) {
         return;
     }
     const playSongBaseFn = (
-        currentPlaySong[PLAY_SONG_WRAPPED_TAG] &&
+        currentPlaySong[PLAY_SONG_WRAPPED_TAG] === true &&
         typeof currentPlaySong[PLAY_SONG_ORIGINAL_REF_TAG] === 'function'
     )
         ? currentPlaySong[PLAY_SONG_ORIGINAL_REF_TAG]
@@ -245,5 +245,5 @@ window[TICK_INTERVAL_ID_KEY] = setInterval(_metTick, 1000 / 60);
     wrappedPlaySong[PLAY_SONG_ORIGINAL_REF_TAG] = playSongBaseFn;
     wrappedPlaySong[PLAY_SONG_INJECT_REF_TAG] = _metInjectButton;
     window.playSong = wrappedPlaySong;
-    window[INSTALLED_PLAY_SONG_REF_KEY] = wrappedPlaySong;
+    window[INSTALLED_HOOKS_REF_KEY] = wrappedPlaySong;
 })();
