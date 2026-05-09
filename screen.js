@@ -169,10 +169,7 @@ window[TICK_INTERVAL_ID_KEY] = setInterval(_metTick, 1000 / 60);
     const currentPlaySong = window.playSong;
     if (typeof currentPlaySong !== 'function') return;
     if (window[PLAY_SONG_HOOK_FLAG]) return;
-    if (currentPlaySong[PLAY_SONG_WRAPPED_TAG]) {
-        window[PLAY_SONG_HOOK_FLAG] = true;
-        return;
-    }
+    if (currentPlaySong[PLAY_SONG_WRAPPED_TAG]) return;
 
     const wrappedPlaySong = async function(filename, arrangement) {
         _metState.lastBeatIdx = -1;
