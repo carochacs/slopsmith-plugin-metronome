@@ -162,7 +162,8 @@ window[TICK_INTERVAL_ID_KEY] = setInterval(_metTick, 1000 / 60);
 // Hook into playSong to inject button and reset state
 (function() {
     const PLAY_SONG_WRAPPED_TAG = 'slopsmithMetronomePlaySongWrapped';
-    if (typeof window.playSong !== 'function' || window.playSong[PLAY_SONG_WRAPPED_TAG]) return;
+    if (typeof window.playSong !== 'function') return;
+    if (window.playSong[PLAY_SONG_WRAPPED_TAG]) return;
     const origPlaySong = window.playSong;
 
     const wrappedPlaySong = async function(filename, arrangement) {
