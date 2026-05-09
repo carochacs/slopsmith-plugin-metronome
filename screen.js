@@ -127,7 +127,7 @@ function _metTick() {
 }
 
 // Register draw hook on the highway renderer for the visual flash
-const DRAW_HOOK_INSTALLED_FLAG = '__slopsmithMetronomeDrawHookInstalled';
+const DRAW_HOOK_INSTALLED_FLAG = 'slopsmithMetronomeDrawHookInstalled';
 if (!window[DRAW_HOOK_INSTALLED_FLAG]) {
     window[DRAW_HOOK_INSTALLED_FLAG] = true;
     highway.addDrawHook(function(ctx, W, H) {
@@ -149,7 +149,7 @@ if (!window[DRAW_HOOK_INSTALLED_FLAG]) {
 }
 
 // Poll at 60fps for beat detection
-const TICK_INTERVAL_INSTALLED_FLAG = '__slopsmithMetronomeTickIntervalInstalled';
+const TICK_INTERVAL_INSTALLED_FLAG = 'slopsmithMetronomeTickIntervalInstalled';
 if (!window[TICK_INTERVAL_INSTALLED_FLAG]) {
     window[TICK_INTERVAL_INSTALLED_FLAG] = true;
     setInterval(_metTick, 1000 / 60);
@@ -161,7 +161,7 @@ if (!window[TICK_INTERVAL_INSTALLED_FLAG]) {
     // older core builds without the load-side guard), don't re-wrap playSong —
     // each re-wrap captures the previous wrapper, growing the chain and
     // leaking closures.
-    const HOOK_KEY = '__slopsmithMetronomeHooksInstalled';
+    const HOOK_KEY = 'slopsmithMetronomeHooksInstalled';
     if (window[HOOK_KEY]) return;
     window[HOOK_KEY] = true;
 
