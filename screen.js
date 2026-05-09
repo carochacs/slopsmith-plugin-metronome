@@ -33,15 +33,21 @@ function _metFlash(isMeasure) {
 }
 
 function _metBindVolumeSlider(slider) {
+    slider.oninput = null;
+    slider.removeAttribute('oninput');
     if (slider._metVolumeListener) {
         slider.removeEventListener('input', slider._metVolumeListener);
     }
     slider.value = Math.round(_metSettings.volume * 100);
+    const volLabel = document.getElementById('met-vol-label');
+    if (volLabel) volLabel.textContent = `${slider.value}%`;
     slider._metVolumeListener = function() { _metSetVolume(this.value); };
     slider.addEventListener('input', slider._metVolumeListener);
 }
 
 function _metBindFlashCheck(flashCheck) {
+    flashCheck.onchange = null;
+    flashCheck.removeAttribute('onchange');
     if (flashCheck._metFlashListener) {
         flashCheck.removeEventListener('change', flashCheck._metFlashListener);
     }
@@ -208,23 +214,35 @@ window[TICK_INTERVAL_ID_KEY] = setInterval(_metTick, 1000 / 60);
 
 // Hook into playSong to inject button and reset state
 (function() {
-    const INSTALLED_PLAY_SONG_REF_KEY = '__slopsmithMetronomeInstalledPlaySongRef';
+    const METRONOME_HOOKS_INSTALLED_FLAG = '__slopsmithMetronomeHooksInstalled';
     const PLAY_SONG_WRAPPED_TAG = 'slopsmithMetronomePlaySongWrapped';
+    const PLAY_SONG_ORIGINAL_REF_TAG = 'slopsmithMetronomePlaySongOriginalRef';
+    const PLAY_SONG_INJECT_REF_TAG = 'slopsmithMetronomePlaySongInjectRef';
     const currentPlaySong = window.playSong;
     if (typeof currentPlaySong !== 'function') return;
-    const installedPlaySongRef = window[INSTALLED_PLAY_SONG_REF_KEY];
-    if (installedPlaySongRef === currentPlaySong) return;
-    if (currentPlaySong[PLAY_SONG_WRAPPED_TAG]) {
-        window[INSTALLED_PLAY_SONG_REF_KEY] = currentPlaySong;
+    const installedPlaySongRef = window[METRONOME_HOOKS_INSTALLED_FLAG];
+    if (
+        installedPlaySongRef === currentPlaySong &&
+        currentPlaySong[PLAY_SONG_WRAPPED_TAG] &&
+        currentPlaySong[PLAY_SONG_INJECT_REF_TAG] === _metInjectButton
+    ) {
         return;
     }
+    const playSongBaseFn = (
+        currentPlaySong[PLAY_SONG_WRAPPED_TAG] &&
+        typeof currentPlaySong[PLAY_SONG_ORIGINAL_REF_TAG] === 'function'
+    )
+        ? currentPlaySong[PLAY_SONG_ORIGINAL_REF_TAG]
+        : currentPlaySong;
 
     const wrappedPlaySong = async function(filename, arrangement) {
         _metState.lastBeatIdx = -1;
-        await currentPlaySong(filename, arrangement);
+        await playSongBaseFn(filename, arrangement);
         _metInjectButton();
     };
     wrappedPlaySong[PLAY_SONG_WRAPPED_TAG] = true;
+    wrappedPlaySong[PLAY_SONG_ORIGINAL_REF_TAG] = playSongBaseFn;
+    wrappedPlaySong[PLAY_SONG_INJECT_REF_TAG] = _metInjectButton;
     window.playSong = wrappedPlaySong;
-    window[INSTALLED_PLAY_SONG_REF_KEY] = wrappedPlaySong;
+    window[METRONOME_HOOKS_INSTALLED_FLAG] = wrappedPlaySong;
 })();
