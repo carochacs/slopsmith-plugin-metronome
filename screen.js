@@ -251,7 +251,7 @@ window[TICK_INTERVAL_ID_KEY] = setInterval(function() {
 
 // Hook into playSong to inject button and reset state
 (function() {
-    const METRONOME_HOOKS_INSTALLED_FLAG = '__slopsmithMetronomeHooksInstalled';
+    const METRONOME_HOOKS_INSTALLED_KEY = '__slopsmithMetronomeHooksInstalled';
     const INSTALLED_PLAY_SONG_WRAPPER_REF_KEY = '__slopsmithMetronomeInstalledPlaySongWrapperRef';
     const PLAY_SONG_WRAPPED_TAG = 'slopsmithMetronomePlaySongWrapped';
     const PLAY_SONG_ORIGINAL_REF_TAG = 'slopsmithMetronomePlaySongOriginalRef';
@@ -259,7 +259,7 @@ window[TICK_INTERVAL_ID_KEY] = setInterval(function() {
     if (typeof currentPlaySong !== 'function') return;
     const installedPlaySongRef = window[INSTALLED_PLAY_SONG_WRAPPER_REF_KEY];
     if (
-        window[METRONOME_HOOKS_INSTALLED_FLAG] === true &&
+        window[METRONOME_HOOKS_INSTALLED_KEY] === true &&
         installedPlaySongRef === currentPlaySong &&
         currentPlaySong[PLAY_SONG_WRAPPED_TAG] === true
     ) {
@@ -281,7 +281,7 @@ window[TICK_INTERVAL_ID_KEY] = setInterval(function() {
     wrappedPlaySong[PLAY_SONG_ORIGINAL_REF_TAG] = playSongBaseFn;
     window.playSong = wrappedPlaySong;
     window[INSTALLED_PLAY_SONG_WRAPPER_REF_KEY] = wrappedPlaySong;
-    window[METRONOME_HOOKS_INSTALLED_FLAG] = true;
+    window[METRONOME_HOOKS_INSTALLED_KEY] = true;
 })();
 
 // Rebind existing controls immediately on script initialization/re-evaluation.
