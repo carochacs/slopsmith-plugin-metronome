@@ -127,25 +127,32 @@ function _metTick() {
 }
 
 // Register draw hook on the highway renderer for the visual flash
-highway.addDrawHook(function(ctx, W, H) {
-    if (_metFlashAlpha < 0.005) return;
+const DRAW_HOOK_KEY = '__slopsmithMetronomeDrawHookInstalled';
+if (!window[DRAW_HOOK_KEY]) {
+    window[DRAW_HOOK_KEY] = true;
+    highway.addDrawHook(function(ctx, W, H) {
+        if (_metFlashAlpha < 0.005) return;
 
-    // Flash across the play line area
-    const y = H * 0.72;
-    const h = H * 0.18;
-    const grad = ctx.createLinearGradient(0, y, 0, y + h);
-    grad.addColorStop(0, `rgba(255, 200, 60, 0)`);
-    grad.addColorStop(0.5, `rgba(255, 200, 60, ${_metFlashAlpha})`);
-    grad.addColorStop(1, `rgba(255, 200, 60, 0)`);
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, y, W, h);
+        // Flash across the play line area
+        const y = H * 0.72;
+        const h = H * 0.18;
+        const grad = ctx.createLinearGradient(0, y, 0, y + h);
+        grad.addColorStop(0, `rgba(255, 200, 60, 0)`);
+        grad.addColorStop(0.5, `rgba(255, 200, 60, ${_metFlashAlpha})`);
+        grad.addColorStop(1, `rgba(255, 200, 60, 0)`);
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, y, W, h);
 
-    // Fade
-    _metFlashAlpha *= 0.88;
-});
+        // Fade
+        _metFlashAlpha *= 0.88;
+    });
+}
 
 // Poll at 60fps for beat detection
-setInterval(_metTick, 1000 / 60);
+const TICK_INTERVAL_KEY = '__slopsmithMetronomeTickIntervalId';
+if (!window[TICK_INTERVAL_KEY]) {
+    window[TICK_INTERVAL_KEY] = setInterval(_metTick, 1000 / 60);
+}
 
 // Hook into playSong to inject button and reset state
 (function() {
