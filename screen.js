@@ -13,6 +13,7 @@ const _metState = window[MET_STATE_KEY] || (window[MET_STATE_KEY] = {
     lastBeatIdx: -1,
     flashAlpha: 0,
 });
+const DRAW_HOOK_HIGHWAY_REF_KEY = 'slopsmithMetronomeDrawHookHighwayRef';
 
 function _metClick(high) {
     if (!_metAudioCtx) _metAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -224,7 +225,6 @@ function _metTick() {
 }
 
 // Register draw hook on the highway renderer for the visual flash
-const DRAW_HOOK_HIGHWAY_REF_KEY = 'slopsmithMetronomeDrawHookHighwayRef';
 _metEnsureDrawHookInstalled();
 
 // Poll at 60fps for beat detection
