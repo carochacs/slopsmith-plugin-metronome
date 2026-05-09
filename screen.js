@@ -128,8 +128,11 @@ function _metTick() {
 
 // Register draw hook on the highway renderer for the visual flash
 const DRAW_HOOK_INSTALLED_FLAG = 'slopsmithMetronomeDrawHookInstalled';
-if (!window[DRAW_HOOK_INSTALLED_FLAG]) {
-    window[DRAW_HOOK_INSTALLED_FLAG] = true;
+if (
+    !window[DRAW_HOOK_INSTALLED_FLAG] &&
+    typeof highway !== 'undefined' &&
+    typeof highway.addDrawHook === 'function'
+) {
     highway.addDrawHook(function(ctx, W, H) {
         if (_metFlashAlpha < 0.005) return;
 
@@ -146,6 +149,7 @@ if (!window[DRAW_HOOK_INSTALLED_FLAG]) {
         // Fade
         _metFlashAlpha *= 0.88;
     });
+    window[DRAW_HOOK_INSTALLED_FLAG] = true;
 }
 
 // Poll at 60fps for beat detection
@@ -157,18 +161,15 @@ window[TICK_INTERVAL_ID_KEY] = setInterval(_metTick, 1000 / 60);
 
 // Hook into playSong to inject button and reset state
 (function() {
-    // Idempotency: if screen.js is re-evaluated (loader cache miss, hot reload,
-    // older core builds without the load-side guard), don't re-wrap playSong —
-    // each re-wrap captures the previous wrapper, growing the chain and
-    // leaking closures.
-    const PLAY_SONG_HOOK_INSTALLED_FLAG = 'slopsmithMetronomeHooksInstalled';
-    if (window[PLAY_SONG_HOOK_INSTALLED_FLAG]) return;
-    window[PLAY_SONG_HOOK_INSTALLED_FLAG] = true;
-
+    const PLAY_SONG_WRAPPED_TAG = 'slopsmithMetronomePlaySongWrapped';
     const origPlaySong = window.playSong;
-    window.playSong = async function(filename, arrangement) {
+    if (typeof origPlaySong !== 'function' || origPlaySong[PLAY_SONG_WRAPPED_TAG]) return;
+
+    const wrappedPlaySong = async function(filename, arrangement) {
         _metLastBeatIdx = -1;
         await origPlaySong(filename, arrangement);
         _metInjectButton();
     };
+    wrappedPlaySong[PLAY_SONG_WRAPPED_TAG] = true;
+    window.playSong = wrappedPlaySong;
 })();
