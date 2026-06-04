@@ -90,7 +90,7 @@ function _metInjectButton() {
     }
 
     const lyricsBtn = document.getElementById('btn-lyrics');
-    const insertBefore = isV3 ? null : (lyricsBtn?.nextSibling || controls.querySelector('button:last-child'));
+    const insertBefore = isV3 ? null : (lyricsBtn?.nextSibling || controls.querySelector(':scope > button:last-of-type'));
 
     const btn = document.createElement('button');
     btn.id = 'btn-metronome';
