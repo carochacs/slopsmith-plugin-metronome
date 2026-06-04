@@ -65,7 +65,18 @@ function _metBindFlashCheck(flashCheck) {
 
 // Inject toggle button into player controls
 function _metInjectButton() {
-    const controls = document.getElementById('player-controls');
+    // v3: mount the metronome controls into the host's stable plugin-control
+    // slot (Plugins rail popover). In v3 #btn-lyrics lives in the auto-hiding
+    // transport (not the slot), so we append into the slot in order
+    // (insertBefore=null) rather than anchoring to a node that isn't a child
+    // of the slot.
+    const isV3 = !!(window.slopsmith && window.slopsmith.uiVersion === 'v3');
+    let slot = null;
+    if (isV3 && window.slopsmith.ui && typeof window.slopsmith.ui.playerControlSlot === 'function') {
+        try { const _s = window.slopsmith.ui.playerControlSlot(); if (_s instanceof Element) slot = _s; }
+        catch (_e) { /* host slot API failure → fall back to legacy container */ }
+    }
+    const controls = slot || document.getElementById('player-controls');
     if (!controls) return;
     const existingBtn = document.getElementById('btn-metronome');
     if (existingBtn) {
@@ -79,7 +90,7 @@ function _metInjectButton() {
     }
 
     const lyricsBtn = document.getElementById('btn-lyrics');
-    const insertBefore = lyricsBtn?.nextSibling || controls.querySelector('button:last-child');
+    const insertBefore = isV3 ? null : (lyricsBtn?.nextSibling || controls.querySelector('button:last-child'));
 
     const btn = document.createElement('button');
     btn.id = 'btn-metronome';
