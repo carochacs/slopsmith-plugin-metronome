@@ -42,4 +42,4 @@ Subdivision times are interpolated between consecutive beat timestamps, so they 
 
 ## License
 
-MIT
+[MIT](LICENSE.txt)
