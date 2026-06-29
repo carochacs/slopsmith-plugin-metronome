@@ -15,11 +15,22 @@ A plugin for [Slopsmith](https://github.com/carochacs/slopsmith) that adds an au
 
 ## Installation
 
+**Docker (web version)**
 ```bash
 cd /path/to/slopsmith/plugins
 git clone https://github.com/carochacs/slopsmith-plugin-metronome.git metronome
 docker compose restart
 ```
+
+**Desktop app** — clone into the platform plugins directory:
+
+| Platform | Plugins directory |
+|----------|-------------------|
+| Windows  | `%APPDATA%\slopsmith-desktop\plugins\` |
+| macOS    | `~/Library/Application Support/slopsmith-desktop/plugins/` |
+| Linux    | `~/.config/slopsmith-desktop/plugins/` |
+
+Then restart the app.
 
 A "Metronome" button will appear in the player controls bar when you play a song. Click it to enable; volume, flash, and subdivision controls appear inline.
 
