@@ -44,6 +44,4 @@ is marked DONE.
 
 ## Tests
 
-- [OPEN] T501 No test harness in repo today. A future task could add a
-  `vm`-based test (mirroring `slopsmith-plugin-notedetect/test/`) that
-  exercises `_metTick` against a synthetic beat array.
+- [DONE] T501 `tests/test_metronome_tick.js` (19 cases): binary-search beat index, eighth/triplet subdivision timing, ±50ms tolerance gating, measure-beat detection. Run with `node tests/test_metronome_tick.js`.
