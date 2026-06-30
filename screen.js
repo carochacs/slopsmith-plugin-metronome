@@ -7,12 +7,14 @@
 let _metAudioCtx = null;
 const MET_SETTINGS_KEY = 'slopsmithMetronomeSettings';
 const DRAW_HOOK_RETRY_DELAY_MS = 1000;
-const _metSettings = window[MET_SETTINGS_KEY] || (window[MET_SETTINGS_KEY] = {
-    enabled: false,
-    volume: 0.4,
-    flashEnabled: true,
-    subdivision: 'none',
-});
+const _metSettingsDefaults = { enabled: false, volume: 0.4, flashEnabled: true, subdivision: 'none' };
+let _metSettingsParsed = null;
+try { _metSettingsParsed = JSON.parse(localStorage.getItem(MET_SETTINGS_KEY) || 'null'); } catch (_e) {}
+const _metSettings = window[MET_SETTINGS_KEY] || (window[MET_SETTINGS_KEY] =
+    Object.assign({}, _metSettingsDefaults, _metSettingsParsed || {}));
+function _metSaveSettings() {
+    try { localStorage.setItem(MET_SETTINGS_KEY, JSON.stringify(_metSettings)); } catch (_e) {}
+}
 // Ensure fields added after initial release exist on saved state
 if (!_metSettings.subdivision) _metSettings.subdivision = 'none';
 
@@ -72,7 +74,7 @@ function _metBindFlashCheck(flashCheck) {
         flashCheck.removeEventListener('change', flashCheck._metFlashListener);
     }
     flashCheck.checked = _metSettings.flashEnabled;
-    flashCheck._metFlashListener = function() { _metSettings.flashEnabled = this.checked; };
+    flashCheck._metFlashListener = function() { _metSettings.flashEnabled = this.checked; _metSaveSettings(); };
     flashCheck.addEventListener('change', flashCheck._metFlashListener);
 }
 
@@ -84,6 +86,7 @@ function _metBindSubdivSelect(sel) {
     sel._metSubdivListener = function() {
         _metSettings.subdivision = this.value;
         _metState.lastSubdivInBeat = -1;
+        _metSaveSettings();
     };
     sel.addEventListener('change', sel._metSubdivListener);
 }
@@ -191,6 +194,7 @@ function _metSyncUi() {
 
 function _metToggle() {
     _metSettings.enabled = !_metSettings.enabled;
+    _metSaveSettings();
     _metSyncUi();
     _metState.lastBeatIdx = -1;
     _metState.lastSubdivInBeat = -1;
@@ -198,6 +202,7 @@ function _metToggle() {
 
 function _metSetVolume(v) {
     _metSettings.volume = v / 100;
+    _metSaveSettings();
     const volLabel = document.getElementById('met-vol-label');
     if (volLabel) volLabel.textContent = v + '%';
 }

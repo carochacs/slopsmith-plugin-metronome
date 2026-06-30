@@ -29,8 +29,7 @@ is marked DONE.
 
 - [DONE] T301 Settings live on a window-scoped object so plugin
   re-evals reuse them.
-- [OPEN] T302 [P] Persist settings to `localStorage` (current state:
-  in-memory only — README implies persistence). Owner: TBD.
+- [DONE] T302 [P] Persist settings to `localStorage` — `_metSaveSettings()` called in toggle, volume, flash, and subdiv change handlers; init merges from localStorage into window-scoped object.
 
 ## Cross-cutting / hardening
 
@@ -40,8 +39,7 @@ is marked DONE.
 - [DONE] T403 Replace legacy property handlers (`oninput`,
   `onchange`) before adding new listeners — protects against double
   binding from earlier plugin versions.
-- [OPEN] T404 [P] Optional: subdivision setting (eighths, triplets).
-  Not requested; would increase scope significantly.
+- [DONE] T404 [P] Subdivision setting (eighths, triplets) — `met-subdiv` select in UI, `_metBindSubdivSelect`, subdivision click logic in `_metTick`.
 - [OPEN] T405 [P] Optional: visual count-in (3-2-1) before a song.
 
 ## Tests
