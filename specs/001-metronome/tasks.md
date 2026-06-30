@@ -40,7 +40,13 @@ is marked DONE.
   `onchange`) before adding new listeners — protects against double
   binding from earlier plugin versions.
 - [DONE] T404 [P] Subdivision setting (eighths, triplets) — `met-subdiv` select in UI, `_metBindSubdivSelect`, subdivision click logic in `_metTick`.
-- [OPEN] T405 [P] Optional: visual count-in (3-2-1) before a song.
+- [DONE] T405 [P] Visual count-in before a song — DOM overlay shows 4-3-2-1
+  in large amber text before the first beat. Alpha fades from 1.0 to 0.3
+  across each beat interval; clears automatically once the first beat arrives.
+  Gated by new `countInEnabled` setting (default off); a "Count-in" checkbox
+  appears in the expanded metronome controls. Count capped at 4; only
+  activates when at least 1 beat of lead time exists before the first note.
+  Cleared on every new song via the playSong wrapper.
 
 ## Tests
 
