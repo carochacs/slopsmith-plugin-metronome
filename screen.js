@@ -7,14 +7,17 @@
 let _metAudioCtx = null;
 const MET_SETTINGS_KEY = 'slopsmithMetronomeSettings';
 const DRAW_HOOK_RETRY_DELAY_MS = 1000;
-const _metSettings = window[MET_SETTINGS_KEY] || (window[MET_SETTINGS_KEY] = {
-    enabled: false,
-    volume: 0.4,
-    flashEnabled: true,
-    subdivision: 'none',
-});
+const _metSettingsDefaults = { enabled: false, volume: 0.4, flashEnabled: true, subdivision: 'none', countInEnabled: false };
+let _metSettingsParsed = null;
+try { _metSettingsParsed = JSON.parse(localStorage.getItem(MET_SETTINGS_KEY) || 'null'); } catch (_e) {}
+const _metSettings = window[MET_SETTINGS_KEY] || (window[MET_SETTINGS_KEY] =
+    Object.assign({}, _metSettingsDefaults, _metSettingsParsed || {}));
+function _metSaveSettings() {
+    try { localStorage.setItem(MET_SETTINGS_KEY, JSON.stringify(_metSettings)); } catch (_e) {}
+}
 // Ensure fields added after initial release exist on saved state
 if (!_metSettings.subdivision) _metSettings.subdivision = 'none';
+if (_metSettings.countInEnabled === undefined) _metSettings.countInEnabled = false;
 
 const MET_STATE_KEY = 'slopsmithMetronomeState';
 const _metState = window[MET_STATE_KEY] || (window[MET_STATE_KEY] = {
@@ -25,6 +28,32 @@ const _metState = window[MET_STATE_KEY] || (window[MET_STATE_KEY] = {
 if (_metState.lastSubdivInBeat === undefined) _metState.lastSubdivInBeat = -1;
 
 let _metNextDrawHookRetryAtMs = 0;
+
+let _metCountInEl = null;  // DOM overlay for count-in numbers
+
+function _metUpdateCountIn(count, alpha) {
+    if (!_metCountInEl) {
+        const el = document.createElement('div');
+        el.id = 'met-count-in-overlay';
+        el.style.cssText =
+            'position:fixed;inset:0;z-index:9999;pointer-events:none;' +
+            'display:flex;align-items:center;justify-content:center;';
+        document.body.appendChild(el);
+        _metCountInEl = el;
+    }
+    _metCountInEl.style.opacity = alpha.toFixed(3);
+    if (_metCountInEl.dataset.count !== String(count)) {
+        _metCountInEl.dataset.count = String(count);
+        _metCountInEl.innerHTML =
+            '<span style="font-size:120px;font-weight:900;color:#f59e0b;' +
+            'text-shadow:0 2px 40px rgba(245,158,11,0.6);font-family:sans-serif;">' +
+            count + '</span>';
+    }
+}
+
+function _metClearCountIn() {
+    if (_metCountInEl) { _metCountInEl.remove(); _metCountInEl = null; }
+}
 
 // type: 'high' = downbeat, 'mid' = regular beat, 'low' = subdivision
 function _metClick(type) {
@@ -72,8 +101,19 @@ function _metBindFlashCheck(flashCheck) {
         flashCheck.removeEventListener('change', flashCheck._metFlashListener);
     }
     flashCheck.checked = _metSettings.flashEnabled;
-    flashCheck._metFlashListener = function() { _metSettings.flashEnabled = this.checked; };
+    flashCheck._metFlashListener = function() { _metSettings.flashEnabled = this.checked; _metSaveSettings(); };
     flashCheck.addEventListener('change', flashCheck._metFlashListener);
+}
+
+function _metBindCountInCheck(check) {
+    if (check._metCountInListener) check.removeEventListener('change', check._metCountInListener);
+    check.checked = !!_metSettings.countInEnabled;
+    check._metCountInListener = function() {
+        _metSettings.countInEnabled = this.checked;
+        _metSaveSettings();
+        if (!this.checked) _metClearCountIn();
+    };
+    check.addEventListener('change', check._metCountInListener);
 }
 
 function _metBindSubdivSelect(sel) {
@@ -84,6 +124,7 @@ function _metBindSubdivSelect(sel) {
     sel._metSubdivListener = function() {
         _metSettings.subdivision = this.value;
         _metState.lastSubdivInBeat = -1;
+        _metSaveSettings();
     };
     sel.addEventListener('change', sel._metSubdivListener);
 }
@@ -108,10 +149,12 @@ function _metInjectButton() {
         const existingSlider = document.getElementById('met-volume');
         const existingFlashCheck = document.getElementById('met-flash-check');
         const existingSubdivSel = document.getElementById('met-subdiv');
+        const existingCountInCheck = document.getElementById('met-count-in-check');
         existingBtn.onclick = _metToggle;
         if (existingSlider) _metBindVolumeSlider(existingSlider);
         if (existingFlashCheck) _metBindFlashCheck(existingFlashCheck);
         if (existingSubdivSel) _metBindSubdivSelect(existingSubdivSel);
+        if (existingCountInCheck) _metBindCountInCheck(existingCountInCheck);
         _metSyncUi();
         return;
     }
@@ -167,6 +210,19 @@ function _metInjectButton() {
     controls.insertBefore(subdivSel, insertBefore);
     _metBindSubdivSelect(subdivSel);
 
+    const countInLabel = document.createElement('label');
+    countInLabel.id = 'met-count-in-label';
+    countInLabel.className = 'flex items-center gap-1 text-xs text-gray-500 cursor-pointer hidden';
+    countInLabel.title = 'Show 4-3-2-1 countdown before the first beat';
+    const countInCheck = document.createElement('input');
+    countInCheck.type = 'checkbox';
+    countInCheck.id = 'met-count-in-check';
+    countInCheck.className = 'accent-amber-400';
+    countInLabel.appendChild(countInCheck);
+    countInLabel.appendChild(document.createTextNode(' Count-in'));
+    controls.insertBefore(countInLabel, insertBefore);
+    _metBindCountInCheck(countInCheck);
+
     _metSyncUi();
 }
 
@@ -183,14 +239,17 @@ function _metSyncUi() {
             : 'px-3 py-1.5 bg-dark-600 hover:bg-dark-500 rounded-lg text-xs text-gray-500 transition';
         btn.textContent = enabled ? 'Metronome ✓' : 'Metronome';
     }
+    const countInLabel = document.getElementById('met-count-in-label');
     if (slider) slider.classList.toggle('hidden', !enabled);
     if (label) label.classList.toggle('hidden', !enabled);
     if (flashLabel) flashLabel.classList.toggle('hidden', !enabled);
     if (subdivSel) subdivSel.classList.toggle('hidden', !enabled);
+    if (countInLabel) countInLabel.classList.toggle('hidden', !enabled);
 }
 
 function _metToggle() {
     _metSettings.enabled = !_metSettings.enabled;
+    _metSaveSettings();
     _metSyncUi();
     _metState.lastBeatIdx = -1;
     _metState.lastSubdivInBeat = -1;
@@ -198,6 +257,7 @@ function _metToggle() {
 
 function _metSetVolume(v) {
     _metSettings.volume = v / 100;
+    _metSaveSettings();
     const volLabel = document.getElementById('met-vol-label');
     if (volLabel) volLabel.textContent = v + '%';
 }
@@ -310,6 +370,27 @@ function _metTick() {
         }
     }
 
+    // Count-in overlay: show 4-3-2-1 before the first beat
+    if (_metSettings.countInEnabled && beats && beats.length >= 2) {
+        const firstBeatTime = beats[0].time;
+        const beatInterval = beats[1].time - beats[0].time;
+        const remaining = firstBeatTime - t;
+        if (remaining > 0.01 && beatInterval > 0.01) {
+            const count = Math.ceil((remaining + 0.001) / beatInterval);
+            if (count >= 1 && count <= 4) {
+                // alpha: 1.0 at the start of each count beat, fades to ~0.3 before the next
+                const beatPhase = ((remaining + 0.001) % beatInterval) / beatInterval;
+                _metUpdateCountIn(count, 0.3 + 0.7 * (1 - beatPhase));
+            } else {
+                _metClearCountIn();
+            }
+        } else {
+            _metClearCountIn();
+        }
+    } else if (_metCountInEl) {
+        _metClearCountIn();
+    }
+
     // Fade flash every tick (draw hook also fades per frame)
     _metState.flashAlpha *= 0.85;
 }
@@ -361,6 +442,7 @@ window[TICK_INTERVAL_ID_KEY] = setInterval(function() {
     const wrappedPlaySong = async function(filename, arrangement) {
         _metState.lastBeatIdx = -1;
         _metState.lastSubdivInBeat = -1;
+        _metClearCountIn();
         await playSongBaseFn(filename, arrangement);
         _metInjectButton();
     };
