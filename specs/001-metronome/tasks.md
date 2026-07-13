@@ -29,8 +29,7 @@ is marked DONE.
 
 - [DONE] T301 Settings live on a window-scoped object so plugin
   re-evals reuse them.
-- [OPEN] T302 [P] Persist settings to `localStorage` (current state:
-  in-memory only — README implies persistence). Owner: TBD.
+- [DONE] T302 [P] Persist settings to `localStorage` — `_metSaveSettings()` called in toggle, volume, flash, and subdiv change handlers; init merges from localStorage into window-scoped object.
 
 ## Cross-cutting / hardening
 
@@ -40,12 +39,15 @@ is marked DONE.
 - [DONE] T403 Replace legacy property handlers (`oninput`,
   `onchange`) before adding new listeners — protects against double
   binding from earlier plugin versions.
-- [OPEN] T404 [P] Optional: subdivision setting (eighths, triplets).
-  Not requested; would increase scope significantly.
-- [OPEN] T405 [P] Optional: visual count-in (3-2-1) before a song.
+- [DONE] T404 [P] Subdivision setting (eighths, triplets) — `met-subdiv` select in UI, `_metBindSubdivSelect`, subdivision click logic in `_metTick`.
+- [DONE] T405 [P] Visual count-in before a song — DOM overlay shows 4-3-2-1
+  in large amber text before the first beat. Alpha fades from 1.0 to 0.3
+  across each beat interval; clears automatically once the first beat arrives.
+  Gated by new `countInEnabled` setting (default off); a "Count-in" checkbox
+  appears in the expanded metronome controls. Count capped at 4; only
+  activates when at least 1 beat of lead time exists before the first note.
+  Cleared on every new song via the playSong wrapper.
 
 ## Tests
 
-- [OPEN] T501 No test harness in repo today. A future task could add a
-  `vm`-based test (mirroring `slopsmith-plugin-notedetect/test/`) that
-  exercises `_metTick` against a synthetic beat array.
+- [DONE] T501 `tests/test_metronome_tick.js` (19 cases): binary-search beat index, eighth/triplet subdivision timing, ±50ms tolerance gating, measure-beat detection. Run with `node tests/test_metronome_tick.js`.
