@@ -8,6 +8,7 @@ A plugin for [Slopsmith](https://github.com/carochacs/slopsmith) that adds an au
 - **Visual flash** — subtle amber glow on the highway canvas on each beat (brighter on downbeats)
 - **Tempo-synced** — follows the song's actual beat map, including tempo changes
 - **Subdivisions** — optional eighth-note or triplet subdivision clicks between beats
+- **Count-in** — optional 4-3-2-1 visual countdown before the song's first beat, toggleable via checkbox (off by default)
 - **Volume control** — slider to adjust click volume (0–100%)
 - **Toggle button** — click "Metronome" in the player controls to enable/disable; reveals controls when active
 - **Flash toggle** — checkbox to enable/disable the visual flash independently
