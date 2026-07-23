@@ -1,0 +1,42 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+#
+# CodeRabbit config for the Slopsmith Metronome plugin — a small
+# frontend-only overlay plugin (no routes.py / backend).
+
+language: en-US
+early_access: false
+
+tone_instructions: >-
+  This repo is developed by a solo maintainer working with Claude Code
+  agents. It's a small, focused plugin — favor concrete correctness
+  findings (beat-timing math, Web Audio scheduling drift) over broad
+  refactor suggestions.
+
+reviews:
+  profile: chill
+  request_changes_workflow: false
+  high_level_summary: true
+  poem: false
+  review_status: true
+  collapse_walkthrough: true
+  auto_review:
+    enabled: true
+    drafts: false
+  path_instructions:
+    - path: "screen.js"
+      instructions: |
+        Vanilla JS IIFE, loaded as a plain `<script>` tag — no bundler, no
+        framework, no build step; don't suggest one for a plugin this size.
+        This is an overlay-style plugin (own rAF/click scheduling driven by
+        the highway's beat map, not a `setRenderer` visualization) — don't
+        suggest it implement the `slopsmithViz_*` renderer-factory contract,
+        that's a different plugin shape. Do flag: click-scheduling drift
+        against `AudioContext.currentTime`, and listeners not cleaned up
+        when leaving the player screen.
+    - path: "**/*.md"
+      instructions: |
+        Documentation. Don't request docstring coverage in code based on
+        gaps here.
+
+chat:
+  auto_reply: true
