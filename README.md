@@ -1,5 +1,7 @@
 # Slopsmith Plugin: Metronome
 
+> **The official Slopsmith project is no longer maintained.** [feedBack](https://github.com/got-feedBack/feedBack) is its successor — see [feedBack-plugin-metronome](https://github.com/got-feedBack/feedBack-plugin-metronome) for the actively maintained version of this plugin.
+
 A plugin for [Slopsmith](https://github.com/carochacs/slopsmith) that adds an audible metronome click and visual beat flash to the highway player, synced to the song's tempo.
 
 ## Features
